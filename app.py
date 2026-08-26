@@ -17,20 +17,20 @@ html_code = """
             font-family: Arial, sans-serif;
             text-align: center;
             margin: 0;
-            padding: 5px;
+            padding: 10px;
             touch-action: manipulation;
             user-select: none;
         }
         h1 {
             color: #ff4757;
-            font-size: 22px;
+            font-size: 20px;
             margin: 5px 0;
         }
         #score-board {
-            font-size: 18px;
+            font-size: 16px;
             color: #2e86de;
             font-weight: bold;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
         }
         canvas {
             background-color: #ffffff;
@@ -42,18 +42,18 @@ html_code = """
             cursor: pointer;
         }
         .controls {
-            margin-top: 10px;
+            margin-top: 12px;
             display: flex;
             justify-content: center;
-            gap: 15px;
+            gap: 20px;
         }
         .ctrl-btn {
             background-color: #ff9f43;
             color: white !important;
-            font-size: 26px;
+            font-size: 24px;
             font-weight: bold;
             width: 130px;
-            height: 70px;
+            height: 65px;
             border: none;
             border-radius: 20px;
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
@@ -66,12 +66,12 @@ html_code = """
         #start-btn {
             background-color: #2ed573;
             color: white;
-            font-size: 18px;
+            font-size: 16px;
             font-weight: bold;
-            padding: 8px 20px;
+            padding: 6px 16px;
             border: none;
-            border-radius: 15px;
-            margin-bottom: 5px;
+            border-radius: 12px;
+            margin-bottom: 8px;
             box-shadow: 0 3px 6px rgba(0,0,0,0.1);
             cursor: pointer;
         }
@@ -86,9 +86,9 @@ html_code = """
         <button id="start-btn" onclick="startGame()">開始 / 重新開始遊戲</button>
     </div>
 
-    <canvas id="gameCanvas" width="340" height="380"></canvas>
+    <canvas id="gameCanvas" width="320" height="320"></canvas>
 
-    <!-- 修正後清晰見到字嘅左右大按鈕 -->
+    <!-- 左右按鈕完全顯露 -->
     <div class="controls">
         <button class="ctrl-btn" ontouchstart="moveLeft()" onclick="moveLeft()">⬅️ 左</button>
         <button class="ctrl-btn" ontouchstart="moveRight()" onclick="moveRight()">右 ➡️</button>
@@ -98,11 +98,11 @@ html_code = """
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
 
-        let playerX = 140;
-        let playerY = 310;
+        let playerX = 130;
+        let playerY = 250;
         let playerWidth = 60;
         let playerHeight = 60;
-        let playerSpeed = 40;
+        let playerSpeed = 35;
 
         let items = [];
         let score = 0;
@@ -112,7 +112,7 @@ html_code = """
         let gameRunning = false;
 
         function startGame() {
-            playerX = 140;
+            playerX = 130;
             score = 0;
             isPig = false;
             pigTimer = 0;
@@ -190,7 +190,7 @@ html_code = """
                 }
             }
 
-            ctx.font = "30px Arial";
+            ctx.font = "28px Arial";
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
             for (let item of items) {
@@ -199,7 +199,7 @@ html_code = """
             }
 
             let playerIcon = isPig ? "🐷" : "👩‍🍳";
-            ctx.font = "46px Arial";
+            ctx.font = "42px Arial";
             ctx.fillText(playerIcon, playerX + playerWidth/2, playerY + playerHeight/2);
 
             let statusText = isPig ? "🐷 變咗蘑菇豬！" : "👩‍🍳 正常 Auntie Mary";
@@ -212,4 +212,5 @@ html_code = """
 </html>
 """
 
-st.components.v1.html(html_code, height=550)
+# 將高度擴大到 720，確保 iPad 完美容納所有元件而不被遮擋
+st.components.v1.html(html_code, height=720)
