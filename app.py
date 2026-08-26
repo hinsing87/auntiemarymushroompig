@@ -1,7 +1,7 @@
 import streamlit as st
 
 st.set_page_config(
-    page_title="Auntie Mary 蘑菇豬", page_icon="🍄", layout="centered"
+    page_title="Auntie Mary 接蘑菇豬", page_icon="🍄", layout="centered"
 )
 
 html_code = """
@@ -10,52 +10,53 @@ html_code = """
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Auntie Mary 蘑菇豬</title>
+    <title>Auntie Mary 接蘑菇豬</title>
     <style>
         body {
             background-color: #f7f1e3;
             font-family: Arial, sans-serif;
             text-align: center;
             margin: 0;
-            padding: 10px;
+            padding: 5px;
             touch-action: manipulation;
             user-select: none;
         }
         h1 {
             color: #ff4757;
-            font-size: 24px;
+            font-size: 22px;
             margin: 5px 0;
         }
         #score-board {
-            font-size: 20px;
+            font-size: 18px;
             color: #2e86de;
             font-weight: bold;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
         }
         canvas {
             background-color: #ffffff;
             border: 4px solid #ff4757;
             border-radius: 15px;
-            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
             max-width: 100%;
             height: auto;
             cursor: pointer;
         }
         .controls {
-            margin-top: 15px;
+            margin-top: 10px;
             display: flex;
             justify-content: center;
-            gap: 20px;
+            gap: 15px;
         }
         .ctrl-btn {
             background-color: #ff9f43;
-            color: white;
-            font-size: 32px;
-            width: 110px;
-            height: 80px;
+            color: white !important;
+            font-size: 26px;
+            font-weight: bold;
+            width: 130px;
+            height: 70px;
             border: none;
             border-radius: 20px;
-            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
             cursor: pointer;
         }
         .ctrl-btn:active {
@@ -65,29 +66,29 @@ html_code = """
         #start-btn {
             background-color: #2ed573;
             color: white;
-            font-size: 22px;
+            font-size: 18px;
             font-weight: bold;
-            padding: 12px 30px;
+            padding: 8px 20px;
             border: none;
-            border-radius: 20px;
-            margin-bottom: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border-radius: 15px;
+            margin-bottom: 5px;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
             cursor: pointer;
         }
     </style>
 </head>
 <body>
 
-    <h1>👩‍🍳 Auntie Mary 蘑菇豬 🐷</h1>
+    <h1>👩‍🍳 Auntie Mary 接蘑菇豬 🐷</h1>
     <div id="score-board">分數: 0 | 狀態: 正常 👩‍🍳</div>
     
     <div>
         <button id="start-btn" onclick="startGame()">開始 / 重新開始遊戲</button>
     </div>
 
-    <canvas id="gameCanvas" width="360" height="420"></canvas>
+    <canvas id="gameCanvas" width="340" height="380"></canvas>
 
-    <!-- 左右控制大按鈕，最適合 iPad 姆指操作 -->
+    <!-- 修正後清晰見到字嘅左右大按鈕 -->
     <div class="controls">
         <button class="ctrl-btn" ontouchstart="moveLeft()" onclick="moveLeft()">⬅️ 左</button>
         <button class="ctrl-btn" ontouchstart="moveRight()" onclick="moveRight()">右 ➡️</button>
@@ -97,11 +98,11 @@ html_code = """
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
 
-        let playerX = 150;
-        let playerY = 350;
+        let playerX = 140;
+        let playerY = 310;
         let playerWidth = 60;
         let playerHeight = 60;
-        let playerSpeed = 35;
+        let playerSpeed = 40;
 
         let items = [];
         let score = 0;
@@ -111,7 +112,7 @@ html_code = """
         let gameRunning = false;
 
         function startGame() {
-            playerX = 150;
+            playerX = 140;
             score = 0;
             isPig = false;
             pigTimer = 0;
@@ -133,7 +134,6 @@ html_code = """
             if (playerX > canvas.width - playerWidth) playerX = canvas.width - playerWidth;
         }
 
-        // 畫面直接點擊也可以左右移動
         canvas.addEventListener('click', function(e) {
             if (!gameRunning) return;
             const rect = canvas.getBoundingClientRect();
@@ -159,11 +159,9 @@ html_code = """
             if (gameRunning) {
                 spawnItem();
 
-                // 更新跌落物件
                 for (let i = items.length - 1; i >= 0; i--) {
                     items[i].y += items[i].speed;
 
-                    // 檢查有沒有接到
                     if (
                         items[i].y + items[i].size >= playerY &&
                         items[i].y <= playerY + playerHeight &&
@@ -174,14 +172,13 @@ html_code = """
                             score += 10;
                         } else {
                             isPig = true;
-                            pigTimer = 45; // 變豬約 1.5 秒
+                            pigTimer = 45;
                             score += 5;
                         }
                         items.splice(i, 1);
                         continue;
                     }
 
-                    // 跌出畫面就刪除
                     if (items[i].y > canvas.height) {
                         items.splice(i, 1);
                     }
@@ -193,8 +190,7 @@ html_code = """
                 }
             }
 
-            // 畫跌落嘅糖同蘑菇
-            ctx.font = "32px Arial";
+            ctx.font = "30px Arial";
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
             for (let item of items) {
@@ -202,12 +198,10 @@ html_code = """
                 ctx.fillText(icon, item.x + item.size/2, item.y + item.size/2);
             }
 
-            // 畫主角 (Auntie Mary 👩‍🍳 或 豬 🐷)
             let playerIcon = isPig ? "🐷" : "👩‍🍳";
-            ctx.font = "48px Arial";
+            ctx.font = "46px Arial";
             ctx.fillText(playerIcon, playerX + playerWidth/2, playerY + playerHeight/2);
 
-            // 更新分數面板
             let statusText = isPig ? "🐷 變咗蘑菇豬！" : "👩‍🍳 正常 Auntie Mary";
             document.getElementById("score-board").innerText = `分數: ${score} | 狀態: ${statusText}`;
         }
@@ -218,4 +212,4 @@ html_code = """
 </html>
 """
 
-st.components.v1.html(html_code, height=640)
+st.components.v1.html(html_code, height=550)
