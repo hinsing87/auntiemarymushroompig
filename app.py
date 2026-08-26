@@ -1,171 +1,272 @@
-import random
 import streamlit as st
 
 # 頁面基本設定
 st.set_page_config(
-    page_title="Auntie Mary 蘑菇豬配對遊戲", page_icon="🃏", layout="centered"
+    page_title="Auntie Mary 貪食蛇大冒險", page_icon="🐍", layout="centered"
 )
 
-# 自訂 CSS 讓 iPad 更好按、卡片更美觀
-st.markdown(
-    """
+# 嵌入完整嘅 HTML5 + JavaScript 貪食蛇遊戲
+html_code = """
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Auntie Mary 貪食蛇</title>
     <style>
-    .big-title { 
-        font-size: 32px !important; 
-        text-align: center; 
-        color: #ff4757; 
-        font-weight: bold; 
-    }
-    .stButton>button { 
-        width: 100%; 
-        height: 80px; 
-        font-size: 28px; 
-        border-radius: 15px; 
-    }
-    .card-btn>button {
-        height: 90px !important;
-        font-size: 36px !important;
-        background-color: #f1f2f6 !important;
-        border: 2px solid #ced6e0 !important;
-    }
+        body {
+            background-color: #f7f1e3;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 10px;
+            touch-action: manipulation;
+        }
+        h1 {
+            color: #ff4757;
+            font-size: 24px;
+            margin: 5px 0;
+        }
+        #score-board {
+            font-size: 20px;
+            color: #2e86de;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        canvas {
+            background-color: #ffffff;
+            border: 4px solid #ff4757;
+            border-radius: 15px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+            max-width: 100%;
+            height: auto;
+        }
+        .controls {
+            margin-top: 15px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            max-width: 280px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .ctrl-btn {
+            background-color: #ff9f43;
+            color: white;
+            font-size: 28px;
+            padding: 20px 0;
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            cursor: pointer;
+            user-select: none;
+        }
+        .ctrl-btn:active {
+            background-color: #ee5253;
+            transform: scale(0.95);
+        }
+        .empty { visibility: hidden; }
+        #start-btn {
+            background-color: #2ed573;
+            color: white;
+            font-size: 22px;
+            font-weight: bold;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 20px;
+            margin-top: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            cursor: pointer;
+        }
     </style>
-""",
-    unsafe_allow_html=True,
-)
+</head>
+<body>
 
-# 標題
-st.markdown(
-    '<p class="big-title">🃏 Auntie Mary 蘑菇豬配對大冒險 🐷</p>',
-    unsafe_allow_html=True,
-)
-st.write(
-    "<h4 style='text-align: center; color: #747d8c;'>訓練記憶力：搵出兩張一樣嘅卡片！</h4>",
-    unsafe_allow_html=True,
-)
-st.write("")
+    <h1>👩‍🍳 Auntie Mary 貪食大冒險 🐷</h1>
+    <div id="score-board">分數: 0 | 狀態: 正常 👩‍🍳</div>
+    
+    <canvas id="gameCanvas" width="360" height="360"></canvas>
+    
+    <div>
+        <button id="start-btn" onclick="startGame()">開始 / 重新開始遊戲</button>
+    </div>
 
-# 定義遊戲圖標（必須包含主角）
-CORE_ITEMS = ["👩‍🍳", "🍄", "🐷"]
-EXTRA_ITEMS = ["🎂", "⭐", "💖", "🎈", "🚗"]
+    <!-- 專為 iPad 觸控而設嘅方向掣 -->
+    <div class="controls">
+        <div class="empty"></div>
+        <button class="ctrl-btn" onclick="setDir(0, -1)">⬆️</button>
+        <div class="empty"></div>
+        <button class="ctrl-btn" onclick="setDir(-1, 0)">⬅️</button>
+        <button class="ctrl-btn" onclick="setDir(0, 1)">⬇️</button>
+        <button class="ctrl-btn" onclick="setDir(1, 0)">➡️</button>
+    </div>
 
-# 初始化遊戲狀態
-if "board" not in st.session_state:
-    st.session_state.game_started = False
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
 
-# 難度選擇
-difficulty = st.selectbox(
-    "📏 請選擇難度：", ["簡單 (4張卡 - 好容易)", "中級 (6張卡 - 挑戰)", "刺激 (8張卡 - 高手)"]
-)
+        const gridSize = 20;
+        const tileCount = 18;
 
-# 根據難度設定卡片數量
-if "簡單" in difficulty:
-    num_pairs = 2
-elif "中級" in difficulty:
-    num_pairs = 3
-else:
-    num_pairs = 4
+        let snake = [];
+        let dx = 1;
+        let dy = 0;
+        let candy = {x: 5, y: 5};
+        let mushroom = {x: 10, y: 10};
+        let score = 0;
+        let isPig = false;
+        let pigTimer = 0;
+        let gameInterval = null;
+        let gameRunning = false;
 
+        function startGame() {
+            snake = [
+                {x: 8, y: 8},
+                {x: 7, y: 8},
+                {x: 6, y: 8}
+            ];
+            dx = 1;
+            dy = 0;
+            score = 0;
+            isPig = false;
+            pigTimer = 0;
+            spawnCandy();
+            spawnMushroom();
+            if (gameInterval) clearInterval(gameInterval);
+            gameInterval = setInterval(gameLoop, 150);
+            gameRunning = true;
+        }
 
-def init_game():
-    # 確保一定有 Auntie Mary, 蘑菇, 豬 (或者部分隨機選取)
-    selected_icons = CORE_ITEMS.copy()
-    if num_pairs > len(CORE_ITEMS):
-        extra_needed = num_pairs - len(CORE_ITEMS)
-        selected_icons += random.sample(EXTRA_ITEMS, extra_needed)
-    elif num_pairs < len(CORE_ITEMS):
-        selected_icons = random.sample(CORE_ITEMS, num_pairs)
+        function setDir(newDx, newDy) {
+            // 避免原地掉頭
+            if (newDx !== -0 && dx !== -newDx) {
+                dx = newDx;
+                dy = newDy;
+            }
+            if (newDy !== -0 && dy !== -newDy) {
+                dx = newDx;
+                dy = newDy;
+            }
+        }
 
-    # 製作雙份以供配對
-    deck = selected_icons * 2
-    random.shuffle(deck)
+        function spawnCandy() {
+            candy.x = Math.floor(Math.random() * tileCount);
+            candy.y = Math.floor(Math.random() * tileCount);
+        }
 
-    st.session_state.board = deck
-    st.session_state.flipped = [False] * len(deck)
-    st.session_state.matched = [False] * len(deck)
-    st.session_state.first_selection = None
-    st.session_state.attempts = 0
-    st.session_state.score = 0
-    st.session_state.game_started = True
+        function spawnMushroom() {
+            mushroom.x = Math.floor(Math.random() * tileCount);
+            mushroom.y = Math.floor(Math.random() * tileCount);
+        }
 
+        function gameLoop() {
+            update();
+            draw();
+        }
 
-# 開始/重新開始按鈕
-col_r1, col_r2, col_r3 = st.columns([1, 2, 1])
-with col_r2:
-    if st.button("🎮 開始遊戲 / 重新洗牌"):
-        init_game()
-        st.rerun()
+        function update() {
+            let head = {x: snake[0].x + dx, y: snake[0].y + dy};
 
-st.write("---")
+            // 撞牆穿牆或 Game Over 設定（對4歲小朋友友善：撞牆會由另一邊出返黎）
+            if (head.x < 0) head.x = tileCount - 1;
+            if (head.x >= tileCount) head.x = 0;
+            if (head.y < 0) head.y = tileCount - 1;
+            if (head.y >= tileCount) head.y = 0;
 
-# 如果未開始，自動初始化一次
-if not st.session_state.get("game_started", False):
-    init_game()
+            // 撞到自己
+            for (let i = 0; i < snake.length; i++) {
+                if (head.x === snake[i].x && head.y === snake[i].y) {
+                    gameOver();
+                    return;
+                }
+            }
 
-board = st.session_state.board
-matched = st.session_state.matched
-flipped = st.session_state.flipped
+            snake.unshift(head);
 
-# 顯示卡片網格（每行 2 或 4 張）
-cols_per_row = 2 if num_pairs <= 2 else 4
-rows = [board[i : i + cols_per_row] for i in range(0, len(board), cols_per_row)]
+            // 食到糖果 🍬
+            if (head.x === candy.x && head.y === candy.y) {
+                score += 10;
+                spawnCandy();
+            } else {
+                snake.pop();
+            }
 
-for r_idx, row in enumerate(rows):
-    cols = st.columns(len(row))
-    for c_idx, icon in enumerate(row):
-        absolute_idx = r_idx * cols_per_row + c_idx
-        with cols[c_idx]:
-            # 如果已經配對成功，顯示剔號；如果反開咗，顯示圖標；否則顯示問號
-            if matched[absolute_idx]:
-                st.markdown(
-                    f"<div style='text-align:center; font-size:36px; padding:20px; background:#2ed573; border-radius:15px;'>✅</div>",
-                    unsafe_allow_html=True,
-                )
-            elif flipped[absolute_idx]:
-                st.markdown(
-                    f"<div style='text-align:center; font-size:36px; padding:20px; background:#ffffff; border:2px solid #ff4757; border-radius:15px;'>{board[absolute_idx]}</div>",
-                    unsafe_allow_html=True,
-                )
-            else:
-                if st.button("❓", key=f"card_{absolute_idx}"):
-                    # 翻開這張卡
-                    st.session_state.flipped[absolute_idx] = True
+            // 食到蘑菇 🍄 -> 變身成豬 🐷！
+            if (head.x === mushroom.x && head.y === mushroom.y) {
+                isPig = true;
+                pigTimer = 15; // 維持 15 個影格係豬嘅狀態
+                score += 5;
+                spawnMushroom();
+            }
 
-                    if st.session_state.first_selection is None:
-                        # 這是第一張翻開的卡
-                        st.session_state.first_selection = absolute_idx
-                    else:
-                        # 這是第二張翻開的卡
-                        first_idx = st.session_state.first_selection
-                        st.session_state.attempts += 1
+            if (isPig) {
+                pigTimer--;
+                if (pigTimer <= 0) {
+                    isPig = false;
+                }
+            }
 
-                        if (
-                            board[first_idx] == board[absolute_idx]
-                            and first_idx != absolute_idx
-                        ):
-                            # 配對成功！
-                            st.session_state.matched[first_idx] = True
-                            st.session_state.matched[absolute_idx] = True
-                            st.session_state.score += 1
-                            st.session_state.first_selection = None
+            updateScoreBoard();
+        }
 
-                            # 檢查是否全部配對成功
-                            if all(st.session_state.matched):
-                                st.balloons()
-                        else:
-                            # 配對失敗，短暫記住後需要讓小朋友知道（Streamlit會自動刷新，我們可以稍後再覆蓋狀態或直接翻轉）
-                            # 為了簡單流暢，這裡點擊下一張時會重設上一輪未配對的卡
-                            pass
-                    st.rerun()
+        function draw() {
+            // 清空畫面
+            ctx.fillStyle = "#fdfbf7";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-# 遊戲統計與通關祝賀
-st.write("")
-st.write(
-    f"<h3 style='text-align: center; color: #1e90ff;'>已成功配對：{st.session_state.score} / {num_pairs} 對</h3>",
-    unsafe_allow_html=True,
-)
+            // 畫格線（淡淡的）
+            ctx.strokeStyle = "#f1f2f6";
+            for (let i = 0; i < tileCount; i++) {
+                ctx.beginPath();
+                ctx.moveTo(i * gridSize, 0);
+                ctx.lineTo(i * gridSize, canvas.height);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(0, i * gridSize);
+                ctx.lineTo(canvas.width, i * gridSize);
+                ctx.stroke();
+            }
 
-if all(st.session_state.matched) and st.session_state.get("game_started", False):
-    st.markdown(
-        "<h2 style='text-align: center; color: #ff4757;'>🎉 太棒啦！你幫 Auntie Mary 搵晒所有蘑菇豬朋友仔！ 🎉</h2>",
-        unsafe_allow_html=True,
-    )
+            // 畫糖果 🍬
+            ctx.font = "20px Arial";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText("🍬", candy.x * gridSize + gridSize/2, candy.y * gridSize + gridSize/2);
+
+            // 畫蘑菇 🍄
+            ctx.fillText("🍄", mushroom.x * gridSize + gridSize/2, mushroom.y * gridSize + gridSize/2);
+
+            // 畫貪食蛇（Auntie Mary 👩‍🍳 或 豬 🐷）
+            for (let i = 0; i < snake.length; i++) {
+                let icon = "👩‍🍳";
+                if (isPig) {
+                    icon = "🐷";
+                } else if (i > 0) {
+                    icon = "💖"; // 身體變成心心
+                }
+                ctx.fillText(icon, snake[i].x * gridSize + gridSize/2, snake[i].y * gridSize + gridSize/2);
+            }
+        }
+
+        function updateScoreBoard() {
+            let statusText = isPig ? "🐷 變咗蘑菇豬啦！" : "👩‍🍳 正常 Auntie Mary";
+            document.getElementById("score-board").innerText = `分數: ${score} | 狀態: ${statusText}`;
+        }
+
+        function gameOver() {
+            clearInterval(gameInterval);
+            gameRunning = false;
+            alert("哎呀！撞到自己啦！禁「開始」再玩過啦！");
+        }
+
+        // 初始畫一次畫面
+        spawnCandy();
+        spawnMushroom();
+        draw();
+    </script>
+</body>
+</html>
+"""
+
+# 用 Streamlit 嘅 components 將 HTML 嵌入去
+st.components.v1.html(html_code, height=620)
