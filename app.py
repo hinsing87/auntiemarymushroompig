@@ -78,7 +78,7 @@ html_code = """
 </head>
 <body>
 
-    <h1>👩‍🍳 Auntie Mary 接蘑菇豬 🐷</h1>
+    <h1>👩‍🍳 Auntie Mary 蘑菇豬 🐷</h1>
     <div id="score-board">分數: 0 | 狀態: 正常 👩‍🍳</div>
     
     <div>
