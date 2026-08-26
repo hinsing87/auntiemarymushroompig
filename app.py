@@ -1,7 +1,7 @@
 import streamlit as st
 
 st.set_page_config(
-    page_title="Auntie Mary 接蘑菇豬", page_icon="🍄", layout="centered"
+    page_title="Auntie Mary 蘑菇豬", page_icon="🍄", layout="centered"
 )
 
 html_code = """
@@ -10,7 +10,7 @@ html_code = """
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Auntie Mary 接蘑菇豬</title>
+    <title>Auntie Mary 蘑菇豬</title>
     <style>
         body {
             background-color: #f7f1e3;
